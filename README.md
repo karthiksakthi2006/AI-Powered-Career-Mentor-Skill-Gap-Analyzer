@@ -1,161 +1,75 @@
 # AI-Powered Career Mentor & Skill Gap Analyzer
 
-## 📌 Overview
+Full-stack project: React + Tailwind (frontend), Node.js + Express (backend), MongoDB (database).
+AI engine uses cosine similarity for skill-gap analysis, combining simulated job-portal data
+(LinkedIn/Indeed/Naukri) with course-platform data (Coursera/Udemy).
 
-AI-Powered Career Mentor & Skill Gap Analyzer helps students identify skill gaps, analyze resumes, receive AI-based career guidance, and generate personalized learning roadmaps.
-
----
-
-## 🚀 Features
-
-- Resume Analysis
-- Skill Extraction
-- Skill Gap Detection
-- Career Recommendations
-- Learning Roadmap Generation
-- Career Readiness Score
-- AI-Based Guidance
-
----
-
-## 🛠 Tech Stack
-
-### Frontend
-- React.js
-- HTML
-- CSS
-- Bootstrap
-
-### Backend
-- Java Spring Boot
-- REST API
-
-### Database
-- MySQL
-
-### Additional Technologies
-- Gemini/OpenAI API
-- JWT Authentication
-- Chart.js
-- Maven
-- GitHub
-
----
-
-## 📂 Project Structure
-
+## Project Structure
 ```
-Career-Mentor/
-│
-├── frontend/
-│   ├── src/
-│   ├── components/
-│   ├── pages/
-│   └── App.js
-│
+career-mentor/
 ├── backend/
-│   ├── controller/
-│   ├── service/
-│   ├── repository/
-│   ├── model/
-│   └── CareerMentorApplication.java
-│
-├── database/
-│   └── careermentor.sql
-│
-└── README.md
+│   ├── server.js          # Entry point
+│   ├── models/             # User, SkillProfile, JobRole, Course, Roadmap
+│   ├── routes/             # auth, profile, roles, analyze
+│   ├── utils/              # skillGapEngine.js (cosine similarity), resumeParser.js, authMiddleware.js
++│   └── data/seed.js       # Seeds job roles + courses
+└── frontend/
+   └── src/
+      ├── pages/         # Login, Register, Dashboard, Profile, Roles, SkillGapResult, Roadmaps
+      ├── components/Navbar.jsx
+      ├── context/AuthContext.jsx
+      └── api.js
 ```
 
----
+## Setup Instructions
 
-## Database Table
+### Prerequisites
+- Node.js (v18+)
+- MongoDB (local install or MongoDB Atlas connection string)
 
-```sql
-CREATE TABLE students (
-    student_id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100),
-    email VARCHAR(100),
-    department VARCHAR(50),
-    skills TEXT
-);
+### 1. Backend Setup
+```bash
+cd backend
+npm install
+cp .env.example .env
+# Edit .env: set MONGO_URI and JWT_SECRET
+npm run seed     # Populates job roles + courses
+npm run dev      # Starts server on http://localhost:5000
 ```
 
----
-
-## Spring Boot API
-
-```java
-@RestController
-@RequestMapping("/api")
-public class CareerController {
-
-    @GetMapping("/skills")
-    public String getSkills() {
-        return "Skill Analysis Completed";
-    }
-}
+### 2. Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev      # Starts on http://localhost:5173
 ```
 
----
+## How It Works
 
-## React Frontend Example
+1. **Register/Login** — JWT-based auth, password hashed with bcrypt.
+2. **Build Profile** — Add skills manually OR paste resume text; NLP-style extractor
+  (`utils/resumeParser.js`) matches against a skill dictionary to auto-extract skills.
+3. **AI Career Recommendations** (`/api/analyze/recommendations`) — Ranks all job roles
+  by cosine similarity between your skill vector and each role's required-skill vector
+  (sourced from simulated LinkedIn/Indeed/Naukri data).
+4. **Skill Gap Analysis** (`/api/analyze/gap`) — For a chosen role: computes matched/missing
+  skills + readiness score (0-100).
+5. **Personalized Learning Path** — For each missing skill, looks up the best-rated course
+  from the seeded Coursera/Udemy dataset and recommends it.
+6. **Roadmaps** — Each analysis is saved to MongoDB and viewable later under "My Roadmaps".
 
-```jsx
-function Home() {
-  return (
-    <div>
-      <h1>AI Career Mentor</h1>
-      <p>Analyze your skills and get career guidance.</p>
-    </div>
-  );
-}
+## AI Engine Details (`utils/skillGapEngine.js`)
+- Builds binary skill vectors over the union vocabulary of student skills + role required skills
+- Computes **cosine similarity** between the two vectors
+- `readiness_score = (cosine_similarity * 0.5 + match_ratio * 0.5) * 100`
+- `recommendRoles()` ranks all roles by this score → powers "AI Career Recommendations"
 
-export default Home;
-```
-
----
-
-## Skill Gap Analysis Logic
-
-```java
-List<String> studentSkills =
-Arrays.asList("Java","HTML","CSS");
-
-List<String> requiredSkills =
-Arrays.asList("Java","React","Spring Boot");
-
-requiredSkills.removeAll(studentSkills);
-
-System.out.println(requiredSkills);
-```
-
-### Output
-
-```
-[React, Spring Boot]
-```
-
----
-
-## Future Enhancements
-
-- AI Mock Interview
-- Internship Recommendation
-- LinkedIn Profile Analysis
-- Real-Time Job Market Analysis
-- Mobile Application
-
----
-
-## Author
-
-Name: Your Name
-
-Department: Artificial Intelligence & Data Science
-
-College: Your College Name
-
----
+## Extending This Project
+- Replace `resumeParser.js` keyword matching with spaCy/OpenAI for better NLP extraction
+- Replace seeded JobRole/Course data with live API calls (Adzuna/JSearch for jobs, Udemy
+  affiliate API for courses)
+- Add weighted skill vectors using `skill_level` (Beginner=1, Intermediate=2, Advanced=3)
+  for more nuanced similarity scoring
 
 ## License
 
